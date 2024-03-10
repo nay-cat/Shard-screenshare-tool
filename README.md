@@ -11,6 +11,8 @@
 
 > The mobile is a private environment, this tool was designed not to violate it, so any way to check the use of hacks that involves leaving the Pojav environment was rejected, it only works inside that folder.
 
+> The APK is signed and does not have any security issues, although some permissions are required to function properly.
+
 # How to use (EN)
 > Download the tool (apk) and check that the player has PojavLauncher installed.
 
