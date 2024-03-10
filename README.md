@@ -9,7 +9,7 @@
 # Privacy
 > No data is collected, no data is sent and no data is stored by this tool, it only works in read-only mode on Pojav Launcher information regarding Pojav Launcher without touching anything related to accounts or sensitive information.
 
-> The mobile is a private environment, this tool was designed not to violate it, so any way to check the use of hacks that involves leaving the Pojav environment was rejected, it only works inside that folder.
+> The mobile is a private environment, this tool was designed not to violate it, so any way to check the use of cheats that involves leaving the Pojav environment was rejected, it only works inside that folder.
 
 > The APK is signed and does not have any security issues, although some permissions are required to function properly.
 
