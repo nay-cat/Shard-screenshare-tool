@@ -25,6 +25,8 @@
 
 > Una vez descargada, se te abrira un explorador de archivos, busca la carpeta de PojavLauncher y seleccionala, mira las imagenes
 
+![image](https://github.com/nay-cat/Shard-screenshare-tool/assets/63517637/56eebc84-d2b8-4364-83b6-6af27c1f9506)
+
 ![image](https://github.com/nay-cat/Shard-screenshare-tool/assets/63517637/60cbce48-1f2d-4a3a-b25c-d62a9f7216f8)
 ![image](https://github.com/nay-cat/Shard-screenshare-tool/assets/63517637/f87de2f2-e303-4ba7-81d8-b00625f7e833)
 ![image](https://github.com/nay-cat/Shard-screenshare-tool/assets/63517637/64124870-49fe-45fd-bb63-1876faceda3c)
