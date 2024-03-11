@@ -10,19 +10,18 @@ public class PackageFinder {
 
     public static boolean isCheating;
 
-    public static void checkAutoclicker(MainActivity mainActivity){
-        isCheating = checkAutoclickPackge(new File(Environment.getExternalStorageDirectory() +
-                "/Android/data/"));
-        if (isCheating){
+    public static void checkAutoclicker(MainActivity mainActivity) {
+        isCheating = checkAutoclickPackage(new File(Environment.getExternalStorageDirectory(), "/Android/data/"));
+        if (isCheating) {
             mainActivity.setCheating(true);
         }
     }
 
-    public static boolean checkAutoclickPackge(File directory) {
+    public static boolean checkAutoclickPackage(File directory) {
         if (directory.exists() && directory.isDirectory()) {
-            File[] filesasd = directory.listFiles();
-            if (filesasd != null) {
-                for (File file : filesasd) {
+            File[] files = directory.listFiles();
+            if (files != null) {
+                for (File file : files) {
                     if (file.getName().toLowerCase().contains("autoclick")) {
                         return true;
                     }
