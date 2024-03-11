@@ -1,4 +1,4 @@
-![image](https://github.com/nay-cat/Shard-screenshare-tool/assets/63517637/6679b25a-0f21-4914-baf5-9298a43bf874)# Compatibility
+# Compatibility
 > Tested on Android 11 and 13 and Signed
 
 > Version: Beta
