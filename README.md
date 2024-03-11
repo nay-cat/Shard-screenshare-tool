@@ -1,4 +1,4 @@
-# Compatibility
+![image](https://github.com/nay-cat/Shard-screenshare-tool/assets/63517637/6679b25a-0f21-4914-baf5-9298a43bf874)# Compatibility
 > Tested on Android 11 and 13 and Signed
 
 > Version: Beta
@@ -30,3 +30,11 @@
 ![image](https://github.com/nay-cat/Shard-screenshare-tool/assets/63517637/60cbce48-1f2d-4a3a-b25c-d62a9f7216f8)
 ![image](https://github.com/nay-cat/Shard-screenshare-tool/assets/63517637/f87de2f2-e303-4ba7-81d8-b00625f7e833)
 ![image](https://github.com/nay-cat/Shard-screenshare-tool/assets/63517637/64124870-49fe-45fd-bb63-1876faceda3c)
+
+# Not a virus
+
+![image](https://github.com/nay-cat/Shard-screenshare-tool/assets/63517637/02c66140-8288-4164-802d-d570574c9987)
+![image](https://github.com/nay-cat/Shard-screenshare-tool/assets/63517637/d76ea205-a82b-481b-8606-022005c6f335)
+![image](https://github.com/nay-cat/Shard-screenshare-tool/assets/63517637/d251ce50-506a-499c-b281-3380a8b404be)
+
+
