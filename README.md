@@ -1,7 +1,7 @@
 # Compatibility
 > Tested on Android 11 and 13 and Signed
 
-> Version: Alpha
+> Version: Beta
 
 # Report bugs
 > Open a GITHUB ISSUE to report bugs, it has a lot of bugs, lack of testing.
