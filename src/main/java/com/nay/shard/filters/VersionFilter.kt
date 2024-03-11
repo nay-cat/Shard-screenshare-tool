@@ -1,12 +1,9 @@
 package com.nay.shard.filters
 
 import android.util.Log
-import com.nay.shard.MainActivity
 
 class VersionFilter {
-
-
-    private val basicCheatVersions = setOf(
+    private val basicCheatVersions = arrayOf(
         "Wurst", "Impact Client", "SkillClient", "LiquidBounce", "Huzuni",
         "Aristois", "Jam", "Metro Client", "Team Battle", "Grey Client",
         "Kr0w Client", "WeepCraft", "TacoClient", "Auxentity Client",
@@ -15,12 +12,14 @@ class VersionFilter {
     )
 
     fun isVersionCheating(versionsList: List<String>?): Boolean {
-        for (cheatName in basicCheatVersions){
-            if (versionsList.toString().contains(cheatName)){
-                Log.d("Cheating", "true "+cheatName)
-                return true;
+        if (versionsList != null) {
+            for (version in versionsList) {
+                if (version in basicCheatVersions) {
+                    Log.d("Cheating", "true $version")
+                    return true
+                }
             }
         }
-        return false;
+        return false
     }
 }
