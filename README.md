@@ -5,12 +5,12 @@
 
 # Results
 ```diff
-- Result: Modified controlmap
-The user has more buttons to click or swipe, if you don't know what it is ignore it and consider it legit.
+! Result: Modified controlmap
+The user has buttons modification to click, if you don't know what it is ignore it and consider it legit.
 ```
 
 ```diff
-! Result: Cheating
+- Result: Cheating
 The user has been detected by a check as a Cheater.
 ```
 
