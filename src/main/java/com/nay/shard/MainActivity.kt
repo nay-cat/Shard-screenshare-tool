@@ -246,18 +246,19 @@ class MainActivity : AppCompatActivity() {
 
         return false
     }
-
     @SuppressLint("SetTextI18n")
     private fun result(cheating: Boolean) {
+        if (keyCheating) {
+            outputResult.setTextColor(Color.YELLOW)
+            outputResult.text = "Result: Modified controlmap"
+        }
         if (cheating) {
-            if (keyCheating) {
-                outputResult.setTextColor(Color.YELLOW)
-                outputResult.text = "Result: Modified controlmap"
-                return;
-            }
             outputResult.setTextColor(Color.RED)
             outputResult.text = "Result: Cheating"
         } else {
+            if (keyCheating) {
+                return;
+            }
             outputResult.setTextColor(Color.GREEN)
             outputResult.text = "Result: Legit"
         }
