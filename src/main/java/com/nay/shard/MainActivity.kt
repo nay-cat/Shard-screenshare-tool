@@ -3,15 +3,16 @@ package com.nay.shard
 import android.Manifest
 import android.annotation.SuppressLint
 import android.app.Activity
-import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Color
+import android.graphics.drawable.AnimationDrawable
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import android.widget.Button
+import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.ActivityResult
@@ -21,12 +22,17 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.documentfile.provider.DocumentFile
-import com.nay.shard.filters.PackageFinder
 import com.nay.shard.filters.VersionFilter
+import org.json.JSONObject
+import java.io.BufferedInputStream
 import java.io.BufferedReader
 import java.io.File
+import java.io.FileInputStream
 import java.io.InputStreamReader
 import java.util.jar.JarFile
+import java.util.zip.ZipEntry
+import java.util.zip.ZipFile
+import java.util.zip.ZipInputStream
 
 class MainActivity : AppCompatActivity() {
 
@@ -38,21 +44,34 @@ class MainActivity : AppCompatActivity() {
     private var fileList: List<String> = emptyList()
     private var pojavTreeUri: Uri? = null
     private var isCheating: Boolean = false
+    private var keyCheating: Boolean = false;
     // private var version: Double = 1.0;
     private val openDirectoryLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result: ActivityResult ->
         handleActivityResult(result)
     }
 
-    // @RequiresApi(Build.VERSION_CODES.Q)
-    // @SuppressLint("WrongViewCast", "MissingInflatedId", "SetTextI18n")
+    private lateinit var animationDrawable: AnimationDrawable;
+    private lateinit var animationView: ImageView;
+
+    /*
+    Thanks to @NotRequiem for optimising the project in terms of code.
+     */
+
+    @RequiresApi(Build.VERSION_CODES.Q)
+    @SuppressLint("WrongViewCast", "MissingInflatedId", "SetTextI18n")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
         initializeViews()
 
+        animationView = findViewById(R.id.profile)
+        animationDrawable = animationView.drawable as AnimationDrawable;
+
+        animationDrawable.start()
         val scanButton: Button = findViewById(R.id.scanButton)
         // moreInfo = findViewById(R.id.scanInfo)
+
         scanButton.setOnClickListener {
             startScan()
         }
@@ -102,41 +121,38 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    @SuppressLint("SetTextI18n")
     private fun runScan() {
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE), PERMISSION_REQUEST_WRITE_EXTERNAL_STORAGE)
-        } else {
-            val versionsList: List<String>? = listVersions(pojavTreeUri)
-            Log.d("Detected versions", versionsList.toString())
+        val versionsList: List<String>? = listVersions(pojavTreeUri)
+        Log.d("Detected versions", versionsList.toString())
 
-            checkVersion(versionsList)
+        Log.d("Check", "Starting version check")
+        outputTextView.text = "Checking versions"
+        checkVersion(versionsList)
 
-            outputTextView.text = "Running autoclicker check"
-            checkAutoclicker()
+        Log.d("Check", "Starting autoclicker check")
+        outputTextView.text = "Running autoclicker check"
+        checkAutoclicker()
 
-            outputTextView.text = "Processing information about launched version"
-            processLaunchedVersion()
+        Log.d("Check", "Starting mods check")
+        outputTextView.text = "Running autoclicker check"
+        listMods(pojavTreeUri)
 
-            outputTextView.text = "Running jar execution check"
-            processJarExecution(pojavTreeUri)
+        Log.d("Check", "Starting version check")
+        outputTextView.text = "Processing information about launched version"
+        processLaunchedVersion()
 
-            outputTextView.text = "Finished scan"
-            result(isCheating)
-        }
+        Log.d("Check", "Starting jar execution check")
+        outputTextView.text = "Running jar execution check"
+        processJarExecution(pojavTreeUri)
 
-        //moreInfo.visibility = View.VISIBLE;
+        Log.d("Check", "Starting controlmap check")
+        outputTextView.text = "Running controlmap check"
+        controlmapCheck(pojavTreeUri);
 
-                        /* Next update
-                        moreInfo.setOnClickListener {
-                            setContentView(R.layout.basic_information)
-                            val modListInfo: TextView = findViewById(R.id.modList)
-                            modListInfo.text = modsList.toString();
-                            val launchedModListInfo: TextView = findViewById(R.id.launchedMods)
-                            launchedModListInfo.text = launchedMods.toString();
-                            val versionList: TextView = findViewById(R.id.versionList)
-                            versionList.text = versionList.toString()
-
-                        }*/
+        outputTextView.text = "Finished scan"
+        result(isCheating)
+        Log.d("Result", isCheating.toString())
     }
 
     private fun checkVersion(versionsList: List<String>?) {
@@ -152,14 +168,19 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    fun setCheating(cheating: Boolean){
+        isCheating = cheating;
+    }
+
+    @SuppressLint("SetTextI18n")
     private fun processLaunchedVersion() {
         val (lastRunVersion, launchedMods) = processLatestLog(pojavTreeUri)
-    
+
         if (lastRunVersion != null && (lastRunVersion == "Forge" || lastRunVersion == "Fabric")) {
             lastVersion.text = "Last version launched: $lastRunVersion"
             println("Last run version: $lastRunVersion")
             Log.d("Last run version", lastRunVersion)
-    
+
             launchedMods?.let { mods ->
                 Log.d("Launched Mods", "Launched Mod List")
                 mods.forEach { mod ->
@@ -167,67 +188,73 @@ class MainActivity : AppCompatActivity() {
                 }
             }
         } else {
-            lastVersion.text = "Last version launched: Other (Not Forge or Fabric)"
+            lastVersion.text = "Last version launched: Other"
         }
     }
 
     private fun listFilesInDirectory(treeUri: Uri?): List<String> {
         val fileList = mutableListOf<String>()
-    
+
         if (treeUri == null) return fileList
-    
+
         val pickedDir = DocumentFile.fromTreeUri(this, treeUri) ?: return fileList
-    
+
         if (!pickedDir.exists()) return fileList
-    
+
         for (file in pickedDir.listFiles() ?: emptyArray()) {
             fileList.add(file.name!!)
         }
-    
+
         return fileList
-    }    
+    }
 
     private fun listVersions(treeUri: Uri?): List<String>? {
         val versionsList = mutableListOf<String>()
-    
+
         if (treeUri == null) return null
-    
+
         val pickedDir = DocumentFile.fromTreeUri(this, treeUri)
         val minecraftDir = pickedDir?.findFile(".minecraft") ?: return null
-    
+
         if (!minecraftDir.isDirectory) return null
-    
+
         val versionsDir = minecraftDir.findFile("versions") ?: return null
-    
+
         if (!versionsDir.isDirectory) return null
-    
+
         for (versionFile in versionsDir.listFiles()) {
             if (versionFile.isDirectory) {
                 versionsList.add(versionFile.name!!)
             }
         }
-    
+
         return if (versionsList.isEmpty()) null else versionsList
-    }    
+    }
 
     private fun checkInstalledAutoclickers(): Boolean {
         val packageManager = packageManager
         val installedApplications = packageManager.getInstalledApplications(PackageManager.MATCH_UNINSTALLED_PACKAGES)
-        val keywords = setOf("AutoClick", "Auto Click", "Clicker")
-    
+        val keywords = setOf("AutoClick", "Auto Click", "Clicker", "Tapper")
+
         for (applicationInfo in installedApplications) {
             val appName = applicationInfo.loadLabel(packageManager).toString()
-            
+
             if (keywords.any { keyword -> appName.contains(keyword, ignoreCase = true) }) {
                 return true
             }
         }
-        
-        return false
-    }    
 
+        return false
+    }
+
+    @SuppressLint("SetTextI18n")
     private fun result(cheating: Boolean) {
         if (cheating) {
+            if (keyCheating) {
+                outputResult.setTextColor(Color.YELLOW)
+                outputResult.text = "Result: Modified controlmap"
+                return;
+            }
             outputResult.setTextColor(Color.RED)
             outputResult.text = "Result: Cheating"
         } else {
@@ -241,23 +268,157 @@ class MainActivity : AppCompatActivity() {
         openDirectoryLauncher.launch(intent)
     }
 
+    private fun controlmapCheck(treeUri: Uri?) {
+        if (treeUri == null) return
+
+        val controlListConfig: MutableList<DocumentFile> = mutableListOf()
+
+        val pickedDir = DocumentFile.fromTreeUri(this, treeUri)
+        val controlmapDir = pickedDir?.findFile("controlmap")
+
+        var keycodes = 0;
+
+        controlmapDir?.listFiles()?.forEach { file ->
+            if (file.isFile) {
+                controlListConfig.add(file)
+            }
+        }
+        Log.d("Controlmap config files", controlListConfig.toString())
+        Log.d("Controlmap config size", controlListConfig.size.toString())
+
+
+        for (file in controlListConfig) {
+            if(readData(file).contains("\"isSwipeable\": true")){
+                Log.d("Controlmap Check", "Swipeable key found")
+                isCheating = true;
+                keyCheating = true;
+            }
+        }
+
+        // Additional keycodes check
+        for (file in controlListConfig) {
+            if(readData(file).contains("[-3,") || readData(file).contains("-3,")){
+                Log.d("Controlmap Check", "Found primary key, adding to keycodes")
+                Log.d("File", readData(file))
+                keycodes++;
+            }
+        }
+
+        if (keycodes >= 3 && keycodes + 2 > controlListConfig.size){
+            Log.d("Controlmap Check", "Found more than 3 primary keys, Total Keycodes Found: $keycodes")
+            isCheating = true;
+            keyCheating = true;
+        }
+
+        for (file in controlListConfig) {
+            getObjects(file.uri);
+        }
+
+    }
+
+    @SuppressLint("Recycle")
+    private fun getObjects(fileUri: Uri) {
+        val inputStream = this.contentResolver.openInputStream(fileUri)
+        val jsonString = inputStream?.bufferedReader().use { it?.readText() }
+        val jsonObject = JSONObject(jsonString)
+        val controlDataList = jsonObject.getJSONArray("mControlDataList")
+        var count = 0
+        for (i in 0 until controlDataList.length()) {
+            val controlData = controlDataList.getJSONObject(i)
+            val keycodesArray = controlData.getJSONArray("keycodes")
+            if (keycodesArray.length() == 4) {
+                for (j in 0 until 4) {
+                    if (keycodesArray.getInt(j) == -3) {
+                        count++
+                        if (count > 3) {
+                            isCheating = true;
+                            keyCheating = true;
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+
+        if (count > 3){
+            isCheating = true;
+            keyCheating = true;
+        }
+    }
+
+    private fun listMods(treeUri: Uri?): List<String>? {
+        val modsList = mutableListOf<String>()
+        val zippedList = mutableListOf<String>()
+
+        if (treeUri != null) {
+            val pickedDir = DocumentFile.fromTreeUri(this, treeUri)
+            val minecraftDir = pickedDir?.findFile(".minecraft")
+            val modsDir = minecraftDir?.findFile("mods")
+
+            if (modsDir != null && modsDir.isDirectory) {
+                for (modFile in modsDir.listFiles()) {
+                    if (modFile.isFile && modFile.name!!.endsWith(".jar")) {
+                        Log.d("Found mod in ./minecraft/mods", modFile.name!!)
+                        modsList.add(modFile.name!!)
+                        val fileInputStream = contentResolver.openInputStream(modFile.uri)
+                        val bufferedInputStream = BufferedInputStream(fileInputStream)
+                        val zipInputStream = ZipInputStream(bufferedInputStream)
+                        var entry: ZipEntry? = zipInputStream.nextEntry
+                        while (entry != null) {
+                            if (!entry.isDirectory) {
+                                val fileName = entry.name
+                                Log.d("JarEntry", fileName)
+                                zippedList.add(fileName)
+                            }
+                            entry = zipInputStream.nextEntry
+                        }
+                        zipInputStream.close()
+                        bufferedInputStream.close()
+                        fileInputStream?.close()
+                    }
+                }
+            }
+        }
+
+        val keywordsToCheck = setOf(
+            "killaura", "reach", "autoclick", "triggerbot", "clicker", "hitboxes",
+            "velocity", "aimassist", "selfdestruct", "fastplace", "safewalk",
+            "fly", "blockesp", "playeresp", "storageesp", "tracers", "nuker",
+            "refill", "cheststealer", "nigger", "7wjiu482ab"
+        )
+
+        val zippedListLowercase = zippedList.map { it.toLowerCase() }
+
+        val containsKeyword = zippedListLowercase.any { zipEntry ->
+            keywordsToCheck.any { keyword ->
+                zipEntry.contains(keyword)
+            }
+        }
+
+        if(containsKeyword){
+            isCheating = true;
+        }
+
+        return modsList.ifEmpty { null }
+    }
+
     @SuppressLint("SetTextI18n")
     private fun processJarExecution(treeUri: Uri?) {
         if (treeUri == null) return
-    
+
         val pickedDir = DocumentFile.fromTreeUri(this, treeUri)
         val latestLogJar = pickedDir?.findFile("latestlog.txt") ?: return
-    
+
         if (!latestLogJar.isFile) return
-    
+
         val logContent = readData(latestLogJar)
         val pattern = "net\\.kdt\\.pojavlaunch/cache/(.*?)\\.jar".toRegex()
         val lines = logContent.lines()
-    
+
         for (line in lines) {
             val matchResult = pattern.find(line) ?: continue
             val jarFileName = matchResult.groupValues[1] + ".jar"
-    
+
             Log.d("Last executed jar", jarFileName)
             val lastExecutedJar: TextView? = findViewById(R.id.lastExecuted)
             lastExecutedJar?.text = "Last executed Jar: $jarFileName"
@@ -266,47 +427,47 @@ class MainActivity : AppCompatActivity() {
 
     private fun processLatestLog(treeUri: Uri?): Pair<String?, List<String>?> {
         if (treeUri == null) return Pair(null, null)
-    
+
         val pickedDir = DocumentFile.fromTreeUri(this, treeUri)
         val minecraftDir = pickedDir?.findFile(".minecraft")
         val logsDir = minecraftDir?.findFile("logs")
-    
+
         if (logsDir == null || !logsDir.isDirectory) return Pair(null, null)
-    
+
         val latestLog = logsDir.findFile("latest.log")
         if (latestLog == null || !latestLog.isFile) return Pair(null, null)
-    
+
         val logContent = readData(latestLog)
-    
+
         if (garbage(logContent)) {
             isCheating = true
             return Pair(null, null)
         }
-    
+
         val lastRunVersion = when {
             logContent.contains("ModLauncher running") -> "Forge"
             logContent.contains("fabricloader") -> "Fabric"
             else -> null
         }
-    
+
         val launchedMods = when (lastRunVersion) {
             "Forge" -> logContent.lines().filter { line -> line.contains("Mod file") }
             "Fabric" -> {
                 val loadingModsLine = logContent.lines().find { line ->
                     line.contains("Loading") && line.contains("mods")
                 }
-                
+
                 val numMods = loadingModsLine?.let {
                     Regex("""(\d+) mods:""").find(it)?.groups?.get(1)?.value?.toIntOrNull()
                 }
-                
+
                 numMods?.let {
                     logContent.lines().dropWhile { line -> line != loadingModsLine }.take(it)
                 }
             }
             else -> null
         }
-    
+
         return Pair(lastRunVersion, launchedMods)
     }
 
@@ -317,15 +478,37 @@ class MainActivity : AppCompatActivity() {
             "Kr0w Client", "WeepCraft", "TacoClient", "Auxentity Client",
             "Reflex Client", "Cyanit Client", "Flare Client", "ThunderHack",
             "Lumina", "RusherHack", "Meteor", "Coffe", "Aoba", "AutoClick",
-            "KillAura", "Reach", "TriggerBot", "SkilledClient", "DoomsDay"
+            "KillAura", "Reach", "TriggerBot", "SkilledClient", "bleachhack", "skligga"
         )
-    
-        val contentInLowerCase = logContent.toLowerCase()
-        return garbageWords.any { word -> contentInLowerCase.contains(word.toLowerCase()) }
-    }    
+
+        val contentLines = logContent.split("\n")
+        for (line in contentLines) {
+            if (line.contains("[CHAT]", ignoreCase = true)) {
+                continue
+            }
+            val contentInLowerCase = line.toLowerCase()
+            if (garbageWords.any { word -> contentInLowerCase.contains(word.toLowerCase()) }) {
+                return true
+            }
+        }
+        return false
+    }
 
     companion object {
         private const val PERMISSION_REQUEST_WRITE_EXTERNAL_STORAGE = 123
         private const val TAG = "MainActivity"
+    }
+
+    private fun readData(documentFile: DocumentFile): String {
+        val inputStream = contentResolver.openInputStream(documentFile.uri)
+        val reader = BufferedReader(InputStreamReader(inputStream))
+        val content = StringBuilder()
+        var line: String?
+        while (reader.readLine().also { line = it } != null) {
+            content.append(line).append("\n")
+        }
+        reader.close()
+        inputStream?.close()
+        return content.toString()
     }
 }
