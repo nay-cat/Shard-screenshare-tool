@@ -7,16 +7,18 @@
 
 # Results
 ```diff
-- <span style="color:yellow;">**Result: Modified controlmap**</span>
-> The user has more buttons to click or swipe, if you don't know what it is ignore it and consider it legit.
+- **Result: Modified controlmap**
+The user has more buttons to click or swipe, if you don't know what it is ignore it and consider it legit.
 ```
+
 ```diff
-! <span style="color:red;">**Result: Cheating**</span>
-> The user has been detected by a check as a Cheater.
+! **Result: Cheating**
+The user has been detected by a check as a Cheater.
 ```
+
 ```diff
-+ <span style="color:green;">**Result: Legit**</span>
-> No check has detected the presence of hacks in the user.
++ **Result: Legit**
+No check has detected the presence of hacks in the user.
 ```
 
 # Report bugs
