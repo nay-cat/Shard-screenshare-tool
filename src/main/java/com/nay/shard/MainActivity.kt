@@ -135,7 +135,7 @@ class MainActivity : AppCompatActivity() {
         checkAutoclicker()
 
         Log.d("Check", "Starting mods check")
-        outputTextView.text = "Running autoclicker check"
+        outputTextView.text = "Running mods check"
         listMods(pojavTreeUri)
 
         Log.d("Check", "Starting version check")
