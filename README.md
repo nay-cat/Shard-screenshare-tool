@@ -6,7 +6,8 @@
 # Results
 ```diff
 ! Result: Modified controlmap
-The user has buttons modification to click or swipe, if you don't know what it is ignore it and consider it legit.
+The user has buttons modification to click or swipe,
+if you don't know what it is ignore it and consider it legit.
 ```
 
 ```diff
