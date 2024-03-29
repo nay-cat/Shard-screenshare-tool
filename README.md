@@ -6,18 +6,18 @@
 # Results
 ```diff
 ! Result: Modified controlmap
-The user has buttons modification to click or swipe,
+The user has buttons modification like more pri buttons or swipe buttons,
 if you don't know what it is ignore it and consider it legit.
 ```
 
 ```diff
 - Result: Cheating
-The user has been detected by a check as a Cheater.
+The user has been detected.
 ```
 
 ```diff
 + Result: Legit
-No check has detected the presence of hacks in the user.
+No one check has detected the presence of cheats in the player.
 ```
 
 # Report bugs
