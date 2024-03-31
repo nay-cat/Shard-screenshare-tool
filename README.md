@@ -12,7 +12,7 @@ if you don't know what it is ignore it and consider it legit.
 
 ```diff
 - Result: Cheating
-The player has been detected as cheater.
+The player has been detected as a cheater by a check
 ```
 
 ```diff
