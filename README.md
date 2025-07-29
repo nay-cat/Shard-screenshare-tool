@@ -19,7 +19,7 @@ The player has been detected as a cheater by a check
 
 ```diff
 + Result: Legit
-No one check has detected the presence of cheats in the player.
+No cheat-related activity was detected
 ```
 
 # Report bugs
