@@ -22,6 +22,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.documentfile.provider.DocumentFile
+import com.nay.shard.databinding.ActivityMainBinding
 import com.nay.shard.filters.VersionFilter
 import org.json.JSONObject
 import java.io.BufferedInputStream
@@ -29,6 +30,7 @@ import java.io.BufferedReader
 import java.io.File
 import java.io.FileInputStream
 import java.io.InputStreamReader
+import java.util.Locale
 import java.util.jar.JarFile
 import java.util.zip.ZipEntry
 import java.util.zip.ZipFile
@@ -36,22 +38,19 @@ import java.util.zip.ZipInputStream
 
 class MainActivity : AppCompatActivity() {
 
+    private lateinit var binding: ActivityMainBinding
     private lateinit var outputTextView: TextView
     private lateinit var outputResult: TextView
     private lateinit var lastVersion: TextView
-    // private lateinit var moreInfo: Button
     private var canScan: Boolean = false
     private var fileList: List<String> = emptyList()
     private var pojavTreeUri: Uri? = null
     private var isCheating: Boolean = false
-    private var keyCheating: Boolean = false;
-    // private var version: Double = 1.0;
+    private var keyCheating: Boolean = false
+
     private val openDirectoryLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result: ActivityResult ->
         handleActivityResult(result)
     }
-
-    private lateinit var animationDrawable: AnimationDrawable;
-    private lateinit var animationView: ImageView;
 
     /*
     Thanks to @NotRequiem for optimising the project in terms of code.
@@ -61,45 +60,33 @@ class MainActivity : AppCompatActivity() {
     @SuppressLint("WrongViewCast", "MissingInflatedId", "SetTextI18n")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
 
+        // Initialize view binding
+        binding = ActivityMainBinding.inflate(layoutInflater)
+        setContentView(binding.root)
+
+        // Set JNI text
+        binding.sampleText.text = stringFromJNI()
+
+        // Initialize views from the old code
         initializeViews()
 
-        animationView = findViewById(R.id.profile)
-        animationDrawable = animationView.drawable as AnimationDrawable;
-
-        animationDrawable.start()
+        // Set up scan button
         val scanButton: Button = findViewById(R.id.scanButton)
-        // moreInfo = findViewById(R.id.scanInfo)
-
         scanButton.setOnClickListener {
             startScan()
         }
     }
 
     private fun initializeViews() {
-        outputTextView = findViewById(R.id.output)
+        outputTextView = findViewById(R.id.outputText)
         outputResult = findViewById(R.id.resultText)
-        lastVersion = findViewById(R.id.lastVersion)
+        lastVersion = findViewById(R.id.lastVersionText)
     }
 
     private fun startScan() {
         Toast.makeText(applicationContext, "Starting scan process", Toast.LENGTH_SHORT).show()
-        if (isPojavLauncherInstalled()) {
-            openDirectoryPicker()
-        } else {
-            Toast.makeText(applicationContext, "Can't detect Pojav Launcher", Toast.LENGTH_SHORT).show()
-        }
-    }
-
-    private fun isPojavLauncherInstalled(): Boolean {
-        val packageManager = packageManager
-        return try {
-            packageManager.getPackageInfo("net.kdt.pojavlaunch", PackageManager.GET_ACTIVITIES)
-            true
-        } catch (e: PackageManager.NameNotFoundException) {
-            false
-        }
+        openDirectoryPicker();
     }
 
     private fun handleActivityResult(result: ActivityResult) {
@@ -148,7 +135,7 @@ class MainActivity : AppCompatActivity() {
 
         Log.d("Check", "Starting controlmap check")
         outputTextView.text = "Running controlmap check"
-        controlmapCheck(pojavTreeUri);
+        controlmapCheck(pojavTreeUri)
 
         outputTextView.text = "Finished scan"
         result(isCheating)
@@ -168,8 +155,8 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    fun setCheating(cheating: Boolean){
-        isCheating = cheating;
+    fun setCheating(cheating: Boolean) {
+        isCheating = cheating
     }
 
     @SuppressLint("SetTextI18n")
@@ -246,18 +233,19 @@ class MainActivity : AppCompatActivity() {
 
         return false
     }
+
     @SuppressLint("SetTextI18n")
     private fun result(cheating: Boolean) {
         if (keyCheating) {
-            outputResult.setTextColor(Color.YELLOW)
-            outputResult.text = "Result: Modified controlmap"
+            outputResult.setTextColor(Color.BLUE)
+            outputResult.text = "Result: Modified controlmap (Keycheating)"
         }
         if (cheating) {
             outputResult.setTextColor(Color.RED)
             outputResult.text = "Result: Cheating"
         } else {
             if (keyCheating) {
-                return;
+                return
             }
             outputResult.setTextColor(Color.GREEN)
             outputResult.text = "Result: Legit"
@@ -277,7 +265,7 @@ class MainActivity : AppCompatActivity() {
         val pickedDir = DocumentFile.fromTreeUri(this, treeUri)
         val controlmapDir = pickedDir?.findFile("controlmap")
 
-        var keycodes = 0;
+        var keycodes = 0
 
         controlmapDir?.listFiles()?.forEach { file ->
             if (file.isFile) {
@@ -287,34 +275,32 @@ class MainActivity : AppCompatActivity() {
         Log.d("Controlmap config files", controlListConfig.toString())
         Log.d("Controlmap config size", controlListConfig.size.toString())
 
-
         for (file in controlListConfig) {
-            if(readData(file).contains("\"isSwipeable\": true")){
+            if (readData(file).contains("\"isSwipeable\": true")) {
                 Log.d("Controlmap Check", "Swipeable key found")
-                isCheating = true;
-                keyCheating = true;
+                isCheating = true
+                keyCheating = true
             }
         }
 
         // Additional keycodes check
         for (file in controlListConfig) {
-            if(readData(file).contains("[-3,") || readData(file).contains("-3,")){
+            if (readData(file).contains("[-3,") || readData(file).contains("-3,")) {
                 Log.d("Controlmap Check", "Found primary key, adding to keycodes")
                 Log.d("File", readData(file))
-                keycodes++;
+                keycodes++
             }
         }
 
-        if (keycodes >= 3 && keycodes + 2 > controlListConfig.size){
+        if (keycodes >= 3 && keycodes + 2 > controlListConfig.size) {
             Log.d("Controlmap Check", "Found more than 3 primary keys, Total Keycodes Found: $keycodes")
-            isCheating = true;
-            keyCheating = true;
+            isCheating = true
+            keyCheating = true
         }
 
         for (file in controlListConfig) {
-            getObjects(file.uri);
+            getObjects(file.uri)
         }
-
     }
 
     @SuppressLint("Recycle")
@@ -331,19 +317,19 @@ class MainActivity : AppCompatActivity() {
                 for (j in 0 until 4) {
                     if (keycodesArray.getInt(j) == -3) {
                         count++
-                        if (count > 3) {
-                            isCheating = true;
-                            keyCheating = true;
-                            break;
+                        if (count > 2) {
+                            isCheating = false
+                            keyCheating = true
+                            break
                         }
                     }
                 }
             }
         }
 
-        if (count > 3){
-            isCheating = true;
-            keyCheating = true;
+        if (count > 3) {
+            isCheating = true
+            keyCheating = true
         }
     }
 
@@ -396,8 +382,8 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        if(containsKeyword){
-            isCheating = true;
+        if (containsKeyword) {
+            isCheating = true
         }
 
         return modsList.ifEmpty { null }
@@ -421,7 +407,7 @@ class MainActivity : AppCompatActivity() {
             val jarFileName = matchResult.groupValues[1] + ".jar"
 
             Log.d("Last executed jar", jarFileName)
-            val lastExecutedJar: TextView? = findViewById(R.id.lastExecuted)
+            val lastExecutedJar: TextView? = findViewById(R.id.lastExecutedText)
             lastExecutedJar?.text = "Last executed Jar: $jarFileName"
         }
     }
@@ -487,17 +473,12 @@ class MainActivity : AppCompatActivity() {
             if (line.contains("[CHAT]", ignoreCase = true)) {
                 continue
             }
-            val contentInLowerCase = line.toLowerCase()
-            if (garbageWords.any { word -> contentInLowerCase.contains(word.toLowerCase()) }) {
+            val contentInLowerCase = line.toLowerCase(Locale.ROOT)
+            if (garbageWords.any { word -> contentInLowerCase.contains(word.toLowerCase(Locale.ROOT)) }) {
                 return true
             }
         }
         return false
-    }
-
-    companion object {
-        private const val PERMISSION_REQUEST_WRITE_EXTERNAL_STORAGE = 123
-        private const val TAG = "MainActivity"
     }
 
     private fun readData(documentFile: DocumentFile): String {
@@ -511,5 +492,20 @@ class MainActivity : AppCompatActivity() {
         reader.close()
         inputStream?.close()
         return content.toString()
+    }
+
+    /**
+     * A native method that is implemented by the 'shard' native library,
+     * which is packaged with this application.
+     */
+    private external fun stringFromJNI(): String
+
+    companion object {
+        private const val PERMISSION_REQUEST_WRITE_EXTERNAL_STORAGE = 123
+        private const val TAG = "MainActivity"
+
+        init {
+            System.loadLibrary("shard")
+        }
     }
 }
