@@ -1,7 +1,9 @@
 # Compatibility
 > Tested on Android 11 and 13 and Signed
 
-> Version: Beta 1.1
+> Version: 2.0.0
+
+This project will no longer be updated because it should already be permanently compatible with most Minecraft launchers on Android.
 
 # Results
 ```diff
